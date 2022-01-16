@@ -2,15 +2,21 @@ const ioHook = require('iohook')
 const keyCode = require('keycode')
 const fs = require('fs/promises')
 
-const file = './data.json'
+const dataFile = './data.json'
+const layoutFile = './layout.json'
 const saveIntervalInSeconds = 10
 
 let lastDataWritten = null
 
 console.log('Loading...')
 
-readData(file).then(data => {
+Promise.all([
+    readData(dataFile),
+    readJsonFile(layoutFile)
+]).then(([data, layout]) => {
     console.log('Ready')
+
+    // console.debug(layout)
 
     ioHook.on('keydown', (event) => {
         collect(event, data)
@@ -23,26 +29,19 @@ readData(file).then(data => {
 
     ioHook.start(false)
 
-    setInterval(() => saveData(file, data), saveIntervalInSeconds * 1000) 
+    setInterval(() => saveData(dataFile, data), saveIntervalInSeconds * 1000) 
 })
 
 async function readData(file) {
     let history = new Map()
 
     try {
-        let data = await fs.readFile(file)
+        const data = await readJsonFile(file)
 
-        if (Buffer.isBuffer(data))
-            data = data.toString()
-
-        if (typeof data === 'string') {
-            lastDataWritten = data
-
-            data = JSON.parse(data)
-
-            if (data.length)
-                history = new Map(data.map(keyData => [keyData.keycode, keyData]))
-        }
+        if (data.length)
+            history = new Map(data.map(keyData => [
+                keyData.keycode, keyData
+            ]))
     } catch(err) {
         console.error('Error reading saved data')
         console.error(err)
@@ -51,10 +50,28 @@ async function readData(file) {
     return history
 }
 
+async function readJsonFile(file) {
+    let data = await fs.readFile(file)
+
+    if (Buffer.isBuffer(data))
+        data = data.toString()
+
+    if (typeof data === 'string') {
+        lastDataWritten = data
+
+        data = JSON.parse(data)
+    }
+
+    return data
+}
+
 function render(data) {
     const output = Array.from(data.entries())
         .sort(([, a], [, b]) => b.count - a.count)
-        .map(([key, {count, rawcode}]) => [keyCode(rawcode), count])
+        .map(([key, {count, rawcode}]) => [
+            keyCode(rawcode) ?? keyCode(key), 
+            count
+        ])
 
     console.table(output)
 }
