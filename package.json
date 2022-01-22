@@ -1,20 +1,21 @@
 {
-  "name": "heatmap",
+  "name": "tecles",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron ."
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Victor Arcas Rios",
+  "license": "GNU V3",
   "dependencies": {
-    "iohook": "^0.6.6",
+    "iohook": "^0.9.3",
     "keycode": "^2.2.1"
   },
   "iohook": {
     "targets": [
-      "node-83"
+      "node-83",
+      "electron-87"
     ],
     "platforms": [
       "win32"
@@ -22,5 +23,8 @@
     "arches": [
       "x64"
     ]
+  },
+  "devDependencies": {
+    "electron": "^12.0.0"
   }
 }

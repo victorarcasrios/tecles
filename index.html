@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tecles</title>
+    </head>
+    <body>
+        <style>
+            body{
+                font-family: Helvetica;
+                text-align: center;
+            }
+
+            .subtitle {
+                color: grey;
+            }
+
+            #main-container {
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+
+            article {
+                float: left;
+                margin: 10px;
+                height: 30px;
+                border: 1px solid black;
+            }
+
+            article section {
+                float: left;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                flex-direction: column;
+                padding: 0 1em 0 1em;
+            }
+
+            article section:first-child {
+                background-color: black;
+                color: white;
+            }
+
+            article .clearfix {
+                clear: both;
+            }
+        </style>
+        <h1 class="title">Tecles</h1>
+        <h3 class="subtitle">Keyboard Heatmap Generator</h3>
+        <div id="main-container"></div>
+        <script src="./renderer.js"></script>
+    </body>
+</html>
