@@ -14,7 +14,8 @@ ipcRenderer.on('data', (event, data) => {
     sortedData.forEach(([key, value], i) => {
         const article = document.createElement('article')
         const keyColumn = document.createElement('section')
-        keyColumn.innerHTML = keyCode(value.rawcode || value.keycode) || '<i>unknown</i>'
+        keyColumn.innerHTML = keyCode(value.rawcode || value.keycode) 
+            || '<i>unknown</i>'
         const countColumn = document.createElement('section')
         countColumn.textContent = value.count
         countColumn.style.backgroundColor = getCellBackgroundColor(i)
@@ -27,7 +28,21 @@ ipcRenderer.on('data', (event, data) => {
         article.appendChild(clearfix)
         container.appendChild(article)
     })
+
+	if(!sortedData.length)
+		renderNoDataMessage(container)
 })
+
+function renderNoDataMessage(container) {
+	const paragraph1 = document.createElement('p')
+	paragraph1.textContent = 'There is no keyboard data'
+
+	const paragraph2 = document.createElement('p')
+	paragraph2.textContent = 'Press any key to start'
+
+    container.appendChild(paragraph1)
+    container.appendChild(paragraph2)
+}
 
 function getCellBackgroundColor(index) {
     if (index < 10) 
