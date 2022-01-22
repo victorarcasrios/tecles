@@ -17,8 +17,12 @@ class PersistanceService {
 
             return new Map(data.map(keyData => [keyData.keycode, keyData]))
         } catch(err) {
-            console.error('Error reading saved data')
-            console.error(err)
+            if(err.code === 'ENOENT')
+                console.info('No data file found. A new one will be created')
+            else {
+                console.error('Error reading saved data')
+                console.error(err)
+            }
         }
 
         return new Map()
