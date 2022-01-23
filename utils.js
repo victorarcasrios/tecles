@@ -1,4 +1,5 @@
 const fs = require('fs/promises')
+const keyname = require('os-keycode').keyname
 
 async function readFileAsString(file) {
     const data = await fs.readFile(file)
@@ -16,6 +17,7 @@ function collect(event, data) {
     const { keycode } = event
     let keyData = data.get(keycode) || {
         ...event,
+        label: keyname(keycode)?.key,
         count: 0
     }
 

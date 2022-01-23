@@ -1,5 +1,4 @@
 const ipcRenderer = require('electron').ipcRenderer
-const keyCode = require('keycode')
 
 const container = document.getElementById("main-container")
 
@@ -13,9 +12,7 @@ ipcRenderer.on('data', (event, data) => {
 
     sortedData.forEach(([key, value], i) => {
         const article = document.createElement('article')
-        const keyColumn = document.createElement('section')
-        keyColumn.innerHTML = keyCode(value.rawcode || value.keycode) 
-            || '<i>unknown</i>'
+        const keyColumn = createKeyColumn(value)
         const countColumn = document.createElement('section')
         countColumn.textContent = value.count
         countColumn.style.backgroundColor = getCellBackgroundColor(i)
@@ -32,6 +29,13 @@ ipcRenderer.on('data', (event, data) => {
 	if(!sortedData.length)
 		renderNoDataMessage(container)
 })
+
+function createKeyColumn({label}) {
+    const element = document.createElement('section')
+    element.innerHTML = label || '<i>unknown</i>'
+
+    return element
+}
 
 function renderNoDataMessage(container) {
 	const paragraph1 = document.createElement('p')

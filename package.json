@@ -10,7 +10,7 @@
   "license": "GNU V3",
   "dependencies": {
     "iohook": "^0.9.3",
-    "keycode": "^2.2.1"
+    "os-keycode": "^1.0.0"
   },
   "iohook": {
     "targets": [
