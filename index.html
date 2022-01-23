@@ -10,11 +10,15 @@
                 text-align: center;
             }
 
+            .clearfix {
+                clear: both;
+            }
+
             .subtitle {
                 color: grey;
             }
 
-            #main-container {
+            #keys-data-container {
                 max-width: 1000px;
                 margin: 0 auto;
             }
@@ -41,10 +45,6 @@
                 color: white;
             }
 
-            article .clearfix {
-                clear: both;
-            }
-
             p {
                 color: red;
                 font-style: italic;
@@ -54,10 +54,50 @@
             p:nth-of-type(1) {
                 margin-top: 1em;
             }
+
+            #keyboard-layout-container {
+                margin: 1em;
+                border: 1px solid black;
+                padding: 1em;
+            }
+
+            #keyboard-layout-container .section {
+                float: left;
+                display: flex;
+                flex-direction: column;
+                margin: 1em;
+            }
+
+            .row {
+                float: left;
+            }
+
+            .key, .space {
+                height: 50px;
+                width: 50px;
+                float: left;
+                border: 1px solid white;
+            }
+
+            .key {
+                border-color: black;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                flex-direction: column;
+                text-transform: uppercase;
+            }
+
+            .space {
+                background-color: grey;
+                border-color: grey;
+            }
         </style>
         <h1 class="title">Tecles</h1>
         <h3 class="subtitle">Keyboard Heatmap Generator</h3>
-        <div id="main-container"></div>
+        <div id="keyboard-layout-container"></div>
+        <br />
+        <div id="keys-data-container"></div>
         <script src="./renderer.js"></script>
     </body>
 </html>

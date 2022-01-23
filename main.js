@@ -2,11 +2,12 @@ const { app, BrowserWindow } = require('electron')
 const ioHook = require('iohook')
 const path = require('path')
 const PersistanceService = require('./persistance-service')
-const { collect } = require('./utils')
+const { collect, readFileAsString } = require('./utils')
 
 const isDebugMode = !app.isPackaged
 
-const file = './data.json'
+const dataFile = './data.json'
+const layoutFile = './layout.json'
 const saveIntervalInSeconds = 10
 
 app.on('window-all-closed', () => process.platform !== 'darwin' && app.quit())
@@ -21,20 +22,38 @@ app.whenReady()
         })
     })
 
+async function readLayout() {
+    try {
+        const dataAsString = await readFileAsString(layoutFile)
+
+        const data = JSON.parse(dataAsString)
+
+        return data
+    } catch(ex) {
+        console.error("Failed to read keyboard layout configuration")
+        console.error(ex)
+    }
+}
+
 async function main() {
     const window = createWindow()
 
     console.log('Window opened')
 
+    const sendLayout = layout => window.webContents.send('layout', layout)
+
     const sendData = data => window.webContents.send('data', data)
 
     const persistanceSvc = new PersistanceService
 
-    const data = await persistanceSvc.readData(file)
+    const layout = await readLayout()
+
+    const data = await persistanceSvc.readData(dataFile)
 
     console.log('Data loaded')
 
     window.webContents.on('did-finish-load', () => {
+        sendLayout(layout)
         sendData(data)
 
         console.log('Data sent')
@@ -52,7 +71,7 @@ async function main() {
     ioHook.start(false)
 
     setInterval(
-        () => persistanceSvc.saveData(file, data), 
+        () => persistanceSvc.saveData(dataFile, data), 
         saveIntervalInSeconds * 1000
     ) 
 }
