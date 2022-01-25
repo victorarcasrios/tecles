@@ -1,8 +1,8 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const ioHook = require('iohook')
 const path = require('path')
 const PersistanceService = require('./persistance-service')
-const { collect } = require('./utils')
+const { collect, updateLabel } = require('./utils')
 
 const isDebugMode = !app.isPackaged
 
@@ -36,14 +36,18 @@ async function main() {
 
     window.webContents.on('did-finish-load', () => {
         sendData(data)
+    })
 
-        console.log('Data sent')
+    ipcMain.handle('update-key-label', (event, {keycode, label}) => {
+        updateLabel(data, keycode, label)
+
+        persistanceSvc.saveData(file, data)
     })
 
     ioHook.on('keyup', (event) => {
         collect(event, data)
 
-        if (isDebugMode && !window.isFocused())
+        if (window.isFocused())
             return
 
         sendData(data)
