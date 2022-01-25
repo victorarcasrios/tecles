@@ -30,9 +30,44 @@ ipcRenderer.on('data', (event, data) => {
 		renderNoDataMessage(container)
 })
 
-function createKeyColumn({label}) {
+function updateKeyLabel(keycode, label) {
+    ipcRenderer.invoke('update-key-label', {keycode, label})
+}
+
+function createKeyColumn({keycode, label}) {
     const element = document.createElement('section')
-    element.innerHTML = label || '<i>unknown</i>'
+    if(label)
+        element.innerHTML = label
+    else
+        element.classList.add('unknown')
+
+    element.addEventListener('click', () => {
+        if (element.querySelectorAll('input').length)
+            return
+
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.value = element.innerHTML
+
+        element.innerHTML = ''
+        element.classList.remove('unknown')
+
+        const controller = new AbortController
+        input.addEventListener('blur', () => {
+            updateKeyLabel(keycode, input.value)
+            element.innerHTML = input.value
+
+            if(!input.value)
+                element.classList.add('unknown')
+
+            input.remove()
+
+            controller.abort()
+        }, {signal: controller.signal})
+
+        element.appendChild(input)
+        input.focus()
+    })
 
     return element
 }

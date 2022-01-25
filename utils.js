@@ -26,7 +26,14 @@ function collect(event, data) {
     data.set(keycode, keyData)
 }
 
+function updateLabel(data, keycode, label) {
+    let keyData = data.get(keycode)
+
+    keyData.label = label
+}
+
 module.exports = {
     collect,
-    readFileAsString
+    readFileAsString,
+    updateLabel
 }
