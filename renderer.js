@@ -10,7 +10,14 @@ ipcRenderer.on('data', (event, data) => {
     const sortedData = Array.from(data.entries())
         .sort(([, a], [, b]) => b.count - a.count)
 
-    sortedData.forEach(([key, value], i) => {
+	if(sortedData.length)
+        renderKeyData(sortedData)
+    else
+		renderNoDataMessage(container)
+})
+
+function renderKeyData(data) {
+    data.forEach(([key, value], i) => {
         const article = document.createElement('article')
         const keyColumn = createKeyColumn(value)
         const countColumn = document.createElement('section')
@@ -25,13 +32,6 @@ ipcRenderer.on('data', (event, data) => {
         article.appendChild(clearfix)
         container.appendChild(article)
     })
-
-	if(!sortedData.length)
-		renderNoDataMessage(container)
-})
-
-function updateKeyLabel(keycode, label) {
-    ipcRenderer.invoke('update-key-label', {keycode, label})
 }
 
 function createKeyColumn({keycode, label}) {
@@ -45,22 +45,35 @@ function createKeyColumn({keycode, label}) {
         if (element.querySelectorAll('input').length)
             return
 
-        const input = document.createElement('input')
-        input.type = 'text'
-        input.value = element.innerHTML
+        const currentLabel = element.innerHTML
+
+        const input = createTextInput(currentLabel)
 
         element.innerHTML = ''
         element.classList.remove('unknown')
 
         const controller = new AbortController
+
         input.addEventListener('blur', () => {
-            updateKeyLabel(keycode, input.value)
-            element.innerHTML = input.value
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
 
-            if(!input.value)
-                element.classList.add('unknown')
+            controller.abort()
+        }, {signal: controller.signal})
 
-            input.remove()
+        input.addEventListener('keyup', event => {
+            if (event.keyCode !== 13)
+                return
+
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
+
+            controller.abort()
+        }, {signal: controller.signal})
+
+        document.addEventListener('click', event => {
+            if(event.target === element || event.target === input)
+                return
+
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
 
             controller.abort()
         }, {signal: controller.signal})
@@ -70,6 +83,26 @@ function createKeyColumn({keycode, label}) {
     })
 
     return element
+}
+
+function createTextInput(value) {
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = value
+
+    return input
+}
+
+function updateKeyAndReplaceInputWithLabel(keycode, currentLabel, badge, input) {
+    if(input.value === currentLabel)
+        ipcRenderer.invoke('update-key-label', {keycode, label: input.value})
+
+    if(!input.value)
+        badge.classList.add('unknown')
+
+    badge.innerHTML = input.value
+
+    input.remove()
 }
 
 function renderNoDataMessage(container) {
