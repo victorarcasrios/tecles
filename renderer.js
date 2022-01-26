@@ -1,5 +1,4 @@
 const ipcRenderer = require('electron').ipcRenderer
-const keyCode = require('keycode')
 
 const keysDataContainer = document.getElementById("keys-data-container")
 const keyboardLayoutContainer = document.getElementById("keyboard-layout-container")
@@ -20,17 +19,17 @@ ipcRenderer.on('data', (event, data) => {
         .sort(([, a], [, b]) => b.count - a.count)
 
 	if(sortedData.length)
-        renderKeysData(keysDataContainer, sortedData)
+        renderKeyBadges(keysDataContainer, sortedData)
     else
 		renderNoDataMessage(keysDataContainer)
 })
 
 function renderLayout(container, layout) {
     for(let section of layout) {
-        const sectionElement = createSection()
+        const sectionElement = createKeyboardSection()
 
         for(let rowData of section) {
-            const rowElement = createRow()
+            const rowElement = createKeysRow()
 
             for(let key of rowData) {
                 rowElement.appendChild(createKeyElement(key))
@@ -47,7 +46,7 @@ function renderLayout(container, layout) {
     container.appendChild(createClearfix())
 }
 
-function createSection() {
+function createKeyboardSection() {
     const element = document.createElement('div')
     element.classList.add('section')
 
@@ -67,7 +66,7 @@ function createKeyElement(key) {
     return element
 }
 
-function createRow() {
+function createKeysRow() {
     const element = document.createElement('div')
     element.classList.add('row')
 
@@ -75,12 +74,10 @@ function createRow() {
 }
 
 
-function renderKeysData(container, data) {
+function renderKeyBadges(container, data) {
     data.forEach(([key, value], i) => {
         const article = document.createElement('article')
-        const keyColumn = document.createElement('section')
-        keyColumn.innerHTML = keyCode(value.rawcode || value.keycode) 
-            || '<i>unknown</i>'
+        const keyColumn = createBadgeKeyNameColumn(value)
         const countColumn = document.createElement('section')
         countColumn.textContent = value.count
         countColumn.style.backgroundColor = getCellBackgroundColor(i)
@@ -98,6 +95,77 @@ function createClearfix() {
     clearfix.classList.add('clearfix')
 
     return clearfix
+}
+
+function createBadgeKeyNameColumn({keycode, label}) {
+    const element = document.createElement('section')
+    if(label)
+        element.innerHTML = label
+    else
+        element.classList.add('unknown')
+
+    element.addEventListener('click', () => {
+        if (element.querySelectorAll('input').length)
+            return
+
+        const currentLabel = element.innerHTML
+
+        const input = createTextInput(currentLabel)
+
+        element.innerHTML = ''
+        element.classList.remove('unknown')
+
+        const controller = new AbortController
+
+        input.addEventListener('blur', () => {
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
+
+            controller.abort()
+        }, {signal: controller.signal})
+
+        input.addEventListener('keyup', event => {
+            if (event.keyCode !== 13)
+                return
+
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
+
+            controller.abort()
+        }, {signal: controller.signal})
+
+        document.addEventListener('click', event => {
+            if(event.target.isSameNode(element) || element.contains(event.target))
+                return
+
+            updateKeyAndReplaceInputWithLabel(keycode, currentLabel, element, input)
+
+            controller.abort()
+        }, {signal: controller.signal})
+
+        element.appendChild(input)
+        input.focus()
+    })
+
+    return element
+}
+
+function createTextInput(value) {
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = value
+
+    return input
+}
+
+function updateKeyAndReplaceInputWithLabel(keycode, currentLabel, badge, input) {
+    if(input.value !== currentLabel)
+        ipcRenderer.invoke('update-key-label', {keycode, label: input.value})
+
+    if(!input.value)
+        badge.classList.add('unknown')
+
+    badge.innerHTML = input.value
+
+    input.remove()
 }
 
 function renderNoDataMessage(container) {

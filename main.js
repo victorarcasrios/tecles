@@ -1,8 +1,8 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const ioHook = require('iohook')
 const path = require('path')
 const PersistanceService = require('./persistance-service')
-const { collect, readFileAsString } = require('./utils')
+const { collect, readFileAsString, updateLabel } = require('./utils')
 
 const isDebugMode = !app.isPackaged
 
@@ -10,7 +10,9 @@ const dataFile = './data.json'
 const layoutFile = './layout.json'
 const saveIntervalInSeconds = 10
 
-app.on('window-all-closed', () => process.platform !== 'darwin' && app.quit())
+app.on('window-all-closed', 
+    () => process.platform !== 'darwin' && app.quit()
+)
 
 app.whenReady()
     .then(() => {
@@ -38,8 +40,6 @@ async function readLayout() {
 async function main() {
     const window = createWindow()
 
-    console.log('Window opened')
-
     const sendLayout = layout => window.webContents.send('layout', layout)
 
     const sendData = data => window.webContents.send('data', data)
@@ -50,19 +50,21 @@ async function main() {
 
     const data = await persistanceSvc.readData(dataFile)
 
-    console.log('Data loaded')
-
     window.webContents.on('did-finish-load', () => {
         sendLayout(layout)
         sendData(data)
+    })
 
-        console.log('Data sent')
+    ipcMain.handle('update-key-label', (event, {keycode, label}) => {
+        updateLabel(data, keycode, label)
+
+        persistanceSvc.saveData(dataFile, data)
     })
 
     ioHook.on('keyup', (event) => {
         collect(event, data)
 
-        if (isDebugMode && !window.isFocused())
+        if (window.isFocused())
             return
 
         sendData(data)
